@@ -197,6 +197,25 @@ final class ClientTest extends TestCase
         self::assertSame('not enabled', $result->message);
     }
 
+    public function testTranscriptionsAreGroupedByObjectAndOrdered(): void
+    {
+        $hit = static fn (string $obj, int $seq, string $text, string $user): array => ['_source' => ['record' => [
+            'contributionId' => $obj.'-'.$seq, 'contribution' => $text, 'contributionSequence' => $seq,
+            'contributors' => [['userName' => $user]], 'target' => ['naId' => 1, 'objectId' => $obj],
+        ]]];
+        $page1 = new MockResponse(json_encode(['body' => ['hits' => ['total' => ['value' => 3], 'hits' => [$hit('10', 2, 'fixed', 'ann'), $hit('11', 1, 'b', 'bob')]]]]));
+        $page2 = new MockResponse(json_encode(['body' => ['hits' => ['total' => ['value' => 3], 'hits' => [$hit('10', 1, 'draft', 'cy')]]]]));
+        $client = $this->client([$page1, $page2]);
+
+        $byObject = $client->getTranscriptions(1);
+
+        self::assertSame(['10', '11'], array_map('strval', array_keys($byObject)));
+        self::assertSame(['draft', 'fixed'], array_map(static fn ($t): ?string => $t->contribution, $byObject['10']));
+        self::assertSame(['cy'], $byObject['10'][0]->contributorNames());
+        self::assertStringContainsString('naId=1', $this->requests[0]['url']);
+        self::assertStringContainsString('offset=2', $this->requests[1]['url']);
+    }
+
     public function testFactoryBuildsAClient(): void
     {
         self::assertInstanceOf(Client::class, ClientFactory::create('k', new MockHttpClient()));

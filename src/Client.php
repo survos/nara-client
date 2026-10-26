@@ -125,6 +125,38 @@ final class Client
     }
 
     /**
+     * Every transcription already on a record, keyed by digital object id. A
+     * transcription is the object's current text (NARA keeps the revisions), so
+     * check this before submitting: an object with an entry has been transcribed,
+     * usually by a volunteer, and a new submission replaces it.
+     *
+     * Fetched by `naId` and grouped here: the Catalog's per-object filters
+     * (objectId, targetObjectId) do not narrow a transcription search.
+     *
+     * @return array<string, list<TranscriptionResult>> objectId => transcriptions, oldest first
+     */
+    public function getTranscriptions(string|int $naId): array
+    {
+        $byObject = [];
+        $offset = 0;
+        do {
+            $body = $this->transcriptionsSearch(['naId' => (string) $naId, 'limit' => self::MAX_LIMIT, 'offset' => $offset])['body']['hits'] ?? [];
+            $hits = $body['hits'] ?? [];
+            foreach ($hits as $hit) {
+                $t = TranscriptionResult::fromArray($hit);
+                $byObject[$t->objectId() ?? '?'][] = $t;
+            }
+            $offset += \count($hits);
+        } while ([] !== $hits && $offset < (int) ($body['total']['value'] ?? 0));
+
+        foreach ($byObject as &$list) {
+            usort($list, static fn (TranscriptionResult $a, TranscriptionResult $b): int => ($a->contributionSequence ?? 0) <=> ($b->contributionSequence ?? 0));
+        }
+
+        return $byObject;
+    }
+
+    /**
      * Search existing contributions (transcriptions, tags, comments). Read-only.
      * Use it to look up your own Catalog user UUID (filter by `userName`, read
      * `userId` off a result) and to check what an object already carries before

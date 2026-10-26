@@ -16,6 +16,29 @@ final readonly class TranscriptionResult
     ) {
     }
 
+    /**
+     * The digital object (page) this transcription is attached to.
+     */
+    public function objectId(): ?string
+    {
+        $id = $this->target['objectId'] ?? null;
+
+        return \is_scalar($id) ? (string) $id : null;
+    }
+
+    /**
+     * Catalog user names of everyone who has contributed to this transcription.
+     *
+     * @return list<string>
+     */
+    public function contributorNames(): array
+    {
+        return array_values(array_filter(array_map(
+            static fn (mixed $c): ?string => \is_array($c) && isset($c['userName']) ? (string) $c['userName'] : null,
+            $this->contributors ?? [],
+        )));
+    }
+
     public static function fromArray(array $data): self
     {
         $source = $data['_source'] ?? [];
