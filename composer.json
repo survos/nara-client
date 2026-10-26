@@ -1,0 +1,32 @@
+{
+    "name": "survos/nara-client",
+    "description": "PHP client for the National Archives Catalog API v2: search, records, and contributing transcriptions, tags and comments",
+    "keywords": ["nara", "archives", "api", "client", "catalog", "transcription"],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {"name": "Tac Tacelosky", "email": "tacman@gmail.com"},
+        {"name": "Survos", "email": "hello@survos.com"}
+    ],
+    "require": {
+        "php": "^8.5",
+        "symfony/http-client": "^8.1",
+        "symfony/http-client-contracts": "^3.6"
+    },
+    "replace": {
+        "survos/nara-php-api": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Survos\\Nara\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Survos\\Nara\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13"
+    }
+}
