@@ -25,6 +25,9 @@ echo $page->total;
 // Every hit, paging lazily (limit is capped at the API maximum of 200 per request).
 foreach ($client->iterate(SearchQuery::terms(['civil', 'war']), max: 1000) as $hit) { /* raw hit array */ }
 
+// Exact name phrase, with the same limit/offset pagination. Hits still need identity checks.
+$page = $client->searchPage(SearchQuery::person('Fred Wesley Goodenough'));
+
 // Typed
 $record = $client->getRecordByNaId(170821856);          // Record
 $objects = $client->getDigitalObjects(170821856);       // list<DigitalObject>: the record's pages/images

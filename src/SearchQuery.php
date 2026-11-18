@@ -41,6 +41,17 @@ final readonly class SearchQuery
         return new self(q: implode(' ', $terms), limit: $limit, offset: $offset);
     }
 
+    /** Search a name as a phrase. Results are candidates, not verified identities. */
+    public static function person(string $name, int $limit = 20, int $offset = 0): self
+    {
+        $name = trim($name);
+        if ('' === $name) {
+            throw new \InvalidArgumentException('A person name is required.');
+        }
+
+        return new self(q: '"'.addcslashes($name, '\\"').'"', limit: $limit, offset: $offset);
+    }
+
     public function withPage(int $limit, int $offset): self
     {
         return new self(

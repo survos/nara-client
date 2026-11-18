@@ -61,6 +61,24 @@ final class ClientTest extends TestCase
         self::assertArrayNotHasKey('naId', $params);
     }
 
+    public function testPersonSearchUsesPhraseAndOffset(): void
+    {
+        $client = $this->client([self::hits(0, 0)]);
+        $client->searchPage(SearchQuery::person('  Fred Wesley Goodenough  ', limit: 10, offset: 20));
+        parse_str(parse_url($this->requests[0]['url'], PHP_URL_QUERY), $params);
+        self::assertSame('"Fred Wesley Goodenough"', $params['q']);
+        self::assertSame('10', $params['limit']);
+        self::assertSame('20', $params['offset']);
+        self::assertArrayNotHasKey('startDate', $params, 'Series dates must not be treated as life dates.');
+        self::assertSame('"A \\"B\\""', SearchQuery::person('A "B"')->q);
+    }
+
+    public function testPersonSearchRejectsEmptyName(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        SearchQuery::person('   ');
+    }
+
     public function testRequestCarriesKeyAndIdentification(): void
     {
         $client = $this->client([self::hits(1, 1)]);
